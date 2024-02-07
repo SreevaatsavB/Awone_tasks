@@ -192,6 +192,8 @@ class Transformer(Module):
             >>> output = transformer_model(src, tgt, src_mask=src_mask, tgt_mask=tgt_mask)
         """
 
+        print(src.shape, tgt.shape)
+
         is_batched = src.dim() == 3
         if not self.batch_first and src.size(1) != tgt.size(1) and is_batched:
             raise RuntimeError("the batch number of src and tgt must be equal")
@@ -203,6 +205,10 @@ class Transformer(Module):
 
         memory = self.encoder(src, mask=src_mask, src_key_padding_mask=src_key_padding_mask,
                               is_causal=src_is_causal)
+        
+        print("###"*25)
+        print("TGT_MASK = ", tgt_mask)
+        print("###"*25)
         output = self.decoder(tgt, memory, tgt_mask=tgt_mask, memory_mask=memory_mask,
                               tgt_key_padding_mask=tgt_key_padding_mask,
                               memory_key_padding_mask=memory_key_padding_mask,
@@ -879,15 +885,13 @@ class TransformerDecoderLayer(Module):
             x = x + self._ff_block(self.norm3(x))
         else:
 
-
             sa_op = self._sa_block(x, tgt_mask, tgt_key_padding_mask, tgt_is_causal)
 
             print("x = ", x)
             print()
             print("sa_op = ", sa_op)
             print()
-            print("temop = ", x + sa_op)
-            print()
+
             # x = self.norm1(x + self._sa_block(x, tgt_mask, tgt_key_padding_mask, tgt_is_causal))
             x = self.norm1(x + sa_op)
 
@@ -926,6 +930,9 @@ class TransformerDecoderLayer(Module):
     # self-attention block
     def _sa_block(self, x: Tensor,
                   attn_mask: Optional[Tensor], key_padding_mask: Optional[Tensor], is_causal: bool = False) -> Tensor:
+        
+        print("SELF ATTENTION DECODER")
+        print(attn_mask)
         x = self.self_attn(x, x, x,
                            attn_mask=attn_mask,
                            key_padding_mask=key_padding_mask,
@@ -936,6 +943,8 @@ class TransformerDecoderLayer(Module):
     # multihead attention block
     def _mha_block(self, x: Tensor, mem: Tensor,
                    attn_mask: Optional[Tensor], key_padding_mask: Optional[Tensor], is_causal: bool = False) -> Tensor:
+        
+        print("CROSS ATTENTION DECODER")
         x = self.multihead_attn(x, mem, mem,
                                 attn_mask=attn_mask,
                                 key_padding_mask=key_padding_mask,

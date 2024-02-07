@@ -4822,6 +4822,7 @@ def _in_projection_packed(
         if q is k:
             # self-attention
             proj = linear(q, w, b)
+            
             # reshape to 3, E and not E, 3 is deliberate for better memory coalescing and keeping same order as chunk()
             proj = proj.unflatten(-1, (3, E)).unsqueeze(0).transpose(0, -2).squeeze(-2).contiguous()
             return proj[0], proj[1], proj[2]
@@ -5240,6 +5241,8 @@ def multi_head_attention_forward(
     # set up shape vars
     tgt_len, bsz, embed_dim = query.shape
 
+    print("MASK = ", attn_mask)
+
     print("query = ", query)
     print("query shape = ", query.shape)
 
@@ -5281,6 +5284,9 @@ def multi_head_attention_forward(
             # longer causal.
             is_causal = False
 
+    print("MASK1 = ", attn_mask, is_causal)
+
+
     assert embed_dim == embed_dim_to_check, \
         f"was expecting embedding dimension of {embed_dim_to_check}, but got {embed_dim}"
     if isinstance(embed_dim, torch.Tensor):
@@ -5305,7 +5311,8 @@ def multi_head_attention_forward(
 
         print("\n _in_projection_packed \n")
         ################
-        
+        print("Shapes = ", q.shape, k.shape, v.shape)
+        print()
         print("Q :- ", q)
         print()
         print("K :- ", k)
@@ -5377,21 +5384,19 @@ def multi_head_attention_forward(
     print("head_dim = ", head_dim)
     print()
     
-    print(q, q.shape)
     q = q.view(tgt_len, bsz * num_heads, head_dim).transpose(0, 1)
-
     #####################################
 
-    print("Q reshaped = ", q)
-    print()
+    # print("Q reshaped = ", q)
+    # print()
     #####################################
 
     if static_k is None:
         k = k.view(k.shape[0], bsz * num_heads, head_dim).transpose(0, 1)
         #####################################
 
-        print("K reshaped = ", k)
-        print()
+        # print("K reshaped = ", k)
+        # print()
         #####################################
     else:
         # TODO finish disentangling control flow so we don't do in-projections when statics are passed
@@ -5404,8 +5409,8 @@ def multi_head_attention_forward(
         v = v.view(v.shape[0], bsz * num_heads, head_dim).transpose(0, 1)
         #####################################
 
-        print("V reshaped = ", v)
-        print()
+        # print("V reshaped = ", v)
+        # print()
         #####################################
     else:
         # TODO finish disentangling control flow so we don't do in-projections when statics are passed
@@ -5450,6 +5455,9 @@ def multi_head_attention_forward(
     ##################################
     # need_weights = True
     ##################################
+        
+    print("MASK2 = ", attn_mask)
+
 
     if need_weights:
         B, Nt, E = q.shape
@@ -5464,6 +5472,8 @@ def multi_head_attention_forward(
 
 
         if attn_mask is not None:
+
+            print("attn_mask shape = ", attn_mask.shape)
             attn_output_weights = torch.baddbmm(attn_mask, q_scaled, k.transpose(-2, -1))
         else:
             attn_output_weights = torch.bmm(q_scaled, k.transpose(-2, -1))
@@ -5512,23 +5522,38 @@ def multi_head_attention_forward(
             else:
                 attn_mask = attn_mask.view(bsz, num_heads, -1, src_len)
 
+            print("Attention mask NOT NONE = ", attn_mask)
+
         q = q.view(bsz, num_heads, tgt_len, head_dim)
         k = k.view(bsz, num_heads, src_len, head_dim)
         v = v.view(bsz, num_heads, src_len, head_dim)
 
-        print(q.shape, v.shape , k.shape)
         print()
 
 
         attn_output = scaled_dot_product_attention(q, k, v, attn_mask, dropout_p, is_causal)
-        attn_output = attn_output.permute(2, 0, 1, 3).contiguous().view(bsz * tgt_len, embed_dim)
+
+        print("SHAPES RIGHT BEFORE ATTENTION :- ", q.shape, k.shape, v.shape)
+        print()
+        print("Q reshaped = ", q)
+        print()
+        print("K reshaped = ", k)
+        print()
+        print("V reshaped = ", v)
+        print()
+
+        print("Attention mask = ", attn_mask)
 
         ############
-        print("scaled_dot_product_attention")
-        print("attn_output = ")
+        print("scaled_dot_product_attention output = ")
         print(attn_output)
         print()
         ############
+
+        
+
+        attn_output = attn_output.permute(2, 0, 1, 3).contiguous().view(bsz * tgt_len, embed_dim)
+
 
 
         attn_output = linear(attn_output, out_proj_weight, out_proj_bias)
