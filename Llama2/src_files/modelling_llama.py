@@ -307,7 +307,18 @@ class LlamaMLP(nn.Module):
             down_proj = sum(down_proj)
             
         else:
+
+            print(self.act_fn)
+
+            print("UP PROJ = ", self.up_proj(x))
+            print()
+            print("GATE PROJ = ", self.gate_proj(x))
+            print()
+            print("ACT (UP PROJ * GATE PROJ) = ", self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+            print()
             down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
+
+            print("DOWN PROJ = ", down_proj)
 
         return down_proj
 
@@ -442,6 +453,7 @@ class LlamaAttention(nn.Module):
                     "with a layer index."
                 )
             kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
+
         cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
         query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
 
@@ -926,15 +938,35 @@ class LlamaDecoderLayer(nn.Module):
             use_cache=use_cache,
             **kwargs,
         )
+
+        print("ATTN DONE\n")
+
+
         hidden_states = residual + hidden_states
+
+        print("residual + hidden_states :- ", hidden_states)
+        print()
+
 
         # Fully Connected
         residual = hidden_states
+
         hidden_states = self.post_attention_layernorm(hidden_states)
+
+        print("Post attention hidden_states :- ", hidden_states)
+        print()
+
         hidden_states = self.mlp(hidden_states)
+
+        print("MLP output :- ", hidden_states)
+        print()
+        
         hidden_states = residual + hidden_states
 
-        outputs = (hidden_states,)
+        outputs = (hidden_states)
+
+        print("OUTPUTS = ", outputs)
+        print()
 
         if output_attentions:
             outputs += (self_attn_weights,)
