@@ -5,7 +5,7 @@
 
 - **[tinyllama2_manual.ipynb](tinyllama2_manual.ipynb)** is the notebook containing functions which allow to verify each and every induvidual layer's intermediate output from the huggingface's llama implementation.
 
-The we train the model for an epoch and validate all the intermediate outputs of the model
+
 
 - **[tinyllama2_gqa.ipynb](tinyllama2_gqa.ipynb)** is the notebook where the tinyllama model is called for inference, only 1 decoder layer and modified configurations
 
