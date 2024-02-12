@@ -11,5 +11,5 @@ The we train the model for an epoch and validate all the intermediate outputs of
 
 - **[Enc_Dec_MH_mask_train](Enc_Dec_MH_mask_train.ipynb)** is the notebook where the encoder-decoder model is initialised and trained for an epoch with pytorch's inbuilt function. 
 
-- **pytorch_src** :- This directory contains all the modified source coder from the pytorch library (print staements were added instead of registering the intermediate outputs)
+- **pytorch_src** :- This directory contains all the modified source code from the pytorch library (print statements were added instead of registering the intermediate outputs)
 
