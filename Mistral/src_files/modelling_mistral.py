@@ -645,23 +645,79 @@ class MistralSdpaAttention(MistralAttention):
                 output_attentions=output_attentions,
                 use_cache=use_cache,
             )
+        
+        ###############################################################################
+
+        # print("Attn mask = ", attention_mask)
+        # print()
+
+        ###############################################################################
 
         bsz, q_len, _ = hidden_states.size()
+
+        #################################################################################################
+        print("position_ids = ", position_ids)
+        print("bsz, query_len  = ", bsz, q_len)
+        print()
 
         query_states = self.q_proj(hidden_states)
         key_states = self.k_proj(hidden_states)
         value_states = self.v_proj(hidden_states)
 
+        print("query = ", query_states)
+        print("key = ", key_states)
+        print("value = ", value_states)
+        print()
+
+        print(query_states.shape, key_states.shape, value_states.shape)
+        print()
+
+        #################################################################################################
+
         query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
         key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
         value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
 
+        #################################################################################################
+
+
+        print(query_states.shape, key_states.shape, value_states.shape)
+        print()
+
+        #################################################################################################
+
+
+        kv_seq_len = key_states.shape[-2]
+
+
+        #################################################################################################
+
+        print("kv_seq_len = ", kv_seq_len)
+        print()
+
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             kv_seq_len += past_key_value.get_usable_length(kv_seq_len, self.layer_idx)
+        
+
+        #####################################################################################
+        print("max_position_embeddings = ", self.max_position_embeddings)
         cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
 
+        print("Cos = ", cos)
+        print()
+        print("Sin = ", sin)
+        print()
+
         query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+
+        print("Rotated query = ", query_states)
+        print()
+        print("Rotated key = ", key_states)
+        print()
+        #####################################################################################
+
+
 
         if past_key_value is not None:
             cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
@@ -683,6 +739,21 @@ class MistralSdpaAttention(MistralAttention):
             key_states = key_states.contiguous()
             value_states = value_states.contiguous()
 
+
+        print("RIGHT BEFORE ATTN :- \n")
+        print("Q = ", query_states)
+        print()
+        print("K = ", key_states)
+        print()
+        print("V = ", value_states)
+        print()
+
+        # dropout_p=self.attention_dropout if self.training else 0.0
+        # print("Dropout = ", dropout_p)
+        print(self.is_causal)   
+        print(attention_mask)
+
+
         attn_output = torch.nn.functional.scaled_dot_product_attention(
             query_states,
             key_states,
@@ -693,10 +764,17 @@ class MistralSdpaAttention(MistralAttention):
             is_causal=self.is_causal and attention_mask is None and q_len > 1,
         )
 
+        print("ATTN OUTPUT = ", attn_output)
+        print()
+
         attn_output = attn_output.transpose(1, 2).contiguous()
         attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
 
+
         attn_output = self.o_proj(attn_output)
+
+        print("SA OUTPUT = ", attn_output)
+        print()
 
         return attn_output, None, past_key_value
 
@@ -747,9 +825,22 @@ class MistralDecoderLayer(nn.Module):
             past_key_value (`Tuple(torch.FloatTensor)`, *optional*): cached past key and value projection states
         """
 
+        print("###"*25)
+        print("LLAMA DECODER FWD START\n")
+
+        print("Attention mask = ", attention_mask)
+        print()
+
+        print("Input (hidden states) = ", hidden_states)
+        print()
+
         residual = hidden_states
 
         hidden_states = self.input_layernorm(hidden_states)
+
+
+        print("LayerNorm(hidden states) = ", hidden_states)
+        print()
 
         # Self Attention
         hidden_states, self_attn_weights, present_key_value = self.self_attn(
@@ -760,15 +851,37 @@ class MistralDecoderLayer(nn.Module):
             output_attentions=output_attentions,
             use_cache=use_cache,
         )
+
+        print("ATTN DONE\n")
+
+
         hidden_states = residual + hidden_states
+
+
+        print("residual + hidden_states :- ", hidden_states)
+        print()
+
 
         # Fully Connected
         residual = hidden_states
         hidden_states = self.post_attention_layernorm(hidden_states)
+
+        print("Post attention hidden_states :- ", hidden_states)
+        print()
+
+
         hidden_states = self.mlp(hidden_states)
+
+        print("MLP output :- ", hidden_states)
+        print()
+        
+
         hidden_states = residual + hidden_states
 
         outputs = (hidden_states,)
+
+        print("OUTPUTS = ", outputs)
+        print()
 
         if output_attentions:
             outputs += (self_attn_weights,)
@@ -992,6 +1105,13 @@ class MistralModel(MistralPreTrainedModel):
                     " this may lead to unexpected behaviour for Flash Attention version of Mistral. Make sure to "
                     " call `tokenizer.padding_side  = 'left'` before tokenizing the input. "
                 )
+
+        ########################################################################
+            
+        print(self._attn_implementation)
+        print()
+
+        ########################################################################
 
         if self._attn_implementation == "flash_attention_2":
             # 2d mask is passed through the layers
