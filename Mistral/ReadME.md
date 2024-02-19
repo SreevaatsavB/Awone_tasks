@@ -6,7 +6,7 @@
 - **[tinymistral_manual](tinymistral_manual.ipynb)** is the notebook containing functions which allow to verify each and every induvidual layer's intermediate output from the huggingface's mistral implementation.
 
 
-
 - **[tinymistral_hg.ipynb](tinymistral_hg.ipynb)** is the notebook where the tinymistral model is called for inference, only 1 decoder layer and modified configurations
 
-- **pytorch_src** :- This directory contains all the modified source code from the pytorch library (print staements were added instead of registering the intermediate outputs)
+
+- **pytorch_src** :- This directory contains all the modified source code from the huggingface library (print statements were added instead of registering the intermediate outputs)
