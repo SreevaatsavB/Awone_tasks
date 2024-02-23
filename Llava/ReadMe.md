@@ -8,7 +8,7 @@
 #
 
 2. 
-- **LLaVA Visual Instruct 150K Dataset Card** (https://huggingface.co/datasets/liuhaotian/LLaVA-Instruct-150K)
+    1. **LLaVA Visual Instruct 150K Dataset Card** (https://huggingface.co/datasets/liuhaotian/LLaVA-Instruct-150K)
     One of the datasets in 2nd part of pre-training (Built by llava team)
 
-- **ScienceQA** (https://scienceqa.github.io/) Another dataset in 2nd part of pre-training.
+    2. **ScienceQA** (https://scienceqa.github.io/) Another dataset in 2nd part of pre-training.
