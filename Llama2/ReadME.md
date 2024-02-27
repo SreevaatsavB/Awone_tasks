@@ -5,8 +5,8 @@
 
 - **[tinyllama2_manual.ipynb](tinyllama2_manual.ipynb)** is the notebook containing functions which allow to verify each and every induvidual layer's intermediate output from the huggingface's llama implementation.
 
-
-
 - **[tinyllama2_gqa.ipynb](tinyllama2_gqa.ipynb)** is the notebook where the tinyllama model is called for inference, only 1 decoder layer and modified configurations
+
+- **[tinyllama2_manual_formatted.ipynb](tinyllama2_manual_formatted.ipynb)** contains all the code of manual computation and verification of the model in a well structured format in numpy framework.
 
 - **pytorch_src** :- This directory contains all the modified source code from the pytorch library (print staements were added instead of registering the intermediate outputs)

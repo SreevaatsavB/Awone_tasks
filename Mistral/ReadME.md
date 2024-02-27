@@ -8,5 +8,6 @@
 
 - **[tinymistral_hg.ipynb](tinymistral_hg.ipynb)** is the notebook where the tinymistral model is called for inference, only 1 decoder layer and modified configurations
 
+- **[tinymistral_manual_formatted.ipynb](tinymistral_manual_formatted.ipynb)** contains all the code of manual computation and verification of the model in a well structured format in numpy framework.
 
 - **pytorch_src** :- This directory contains all the modified source code from the huggingface library (print statements were added instead of registering the intermediate outputs)
