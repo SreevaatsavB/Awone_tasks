@@ -803,6 +803,7 @@ class Blip2QFormerLayer(nn.Module):
         if layer_idx % config.cross_attention_frequency == 0:
             self.crossattention = Blip2QFormerAttention(config, is_cross_attention=True)
             self.has_cross_attention = True
+            
         else:
             self.has_cross_attention = False
 
